@@ -1,7 +1,7 @@
-require("babel/polyfill");
-require('babel/register')({
-	stage: 0,
-	experimental: true
-});
+// require("babel/polyfill");
+// require('babel/register')({
+// 	stage: 0,
+// 	experimental: true
+// });
 
-module.exports = require('./src/slimpay');
+module.exports = require('./lib/slimpay');

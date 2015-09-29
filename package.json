@@ -14,12 +14,14 @@
     "type": "git",
     "url": "https://github.com/Thebigbignooby/slimpay.git"
   },
-  "license": "ISC",
+  "license": "MIT",
   "dependencies": {
-    "babel": "5.8.23",
     "bluebird": "2.10.0",
     "request": "2.62.0",
     "traverson": "3.0.0",
     "traverson-hal": "4.0.0"
+  },
+  "devDependencies": {
+    "babel": "5.8.23"
   }
 }
