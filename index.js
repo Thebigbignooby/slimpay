@@ -5,3 +5,4 @@
 // });
 
 module.exports = require('./lib/slimpay');
+// module.exports = require('./src/slimpay');

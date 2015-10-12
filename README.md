@@ -3,10 +3,6 @@ SlimPay allows europeans to charge customers using SEPA rather than bank cards.
 
 Full documention can be found [HERE](https://api-sandbox.slimpay.net/docs/)
 
-* sandbox url endpoint : `api-sandbox.slimpay.net/`
-* production url endpoint : `api.slimpay.net/`
-* authentication URI path : `oauth/token?grant_type=client_credentials&scope=api`
-
 ## Usage
 
 First thing to do is configure slimpay with your app credentials and the endpoint URL
@@ -14,22 +10,19 @@ First thing to do is configure slimpay with your app credentials and the endpoin
 ```javascript
 var slimpay = require('slimpay');
 
-var endPointUrl = 'api-sandbox.slimpay.net/';
-var authPath = 'oauth/token?grant_type=client_credentials&scope=api';
-
 var user = 'democreditor01';
 var password = 'demosecret01';
 var creditor = 'democreditor';
 
 var config = {
   user: user,
-  password: password,
-  endPointUrl: endPointUrl,
-  authPath: authPath,
-  creditor: creditor
+  password: password
 }
 
 slimpay.config(config);
+slimpay.setCreditor(creditor);
+slimpay.setEnv('development');
+slimpay.init();
 ```
 Now slimpay is ready to use. The first thing you can do is get some links that you might want to follow.
 ```javascript
@@ -140,10 +133,8 @@ var orderRepresentation = {
      }],
     started : true 
 }
-var options = {
-  item: orderRepresentation
-}
-slimpay.follow('POST', 'https://api.slimpay.net/alps#create-orders', options)
+
+slimpay.signMandate(orderRepresentation)
   .then(function (result) {
     console.log(result);
   });
@@ -174,6 +165,9 @@ This should give you something that looks like
     "dateCreated": "2015-09-25T15:15:35.889+0000"
 }
 ```
+
+
+this is getting a rework. might not work now.
 
 slimpay.follow() takes a method, a link, and options.
 

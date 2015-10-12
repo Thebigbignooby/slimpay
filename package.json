@@ -1,6 +1,6 @@
 {
   "name": "slimpay",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "library to use slimpay's API",
   "main": "index.js",
   "scripts": {
