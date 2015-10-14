@@ -34,7 +34,6 @@ class SlimPay {
     }
 
     config (config) {
-        console.log(config);
         if(!config.user) {
             console.log('new error, no config.user');
             return new Error('config must have user');
@@ -48,15 +47,13 @@ class SlimPay {
     }
 
     setCreditor (creditor) {
-        console.log(creditor);
         this.creditor = creditor;
     }
 
     setEnv (env) {
-        console.log(env);
         if (env === 'production') this.env = env;
         else if (env === 'development') this.env = env;
-        else throw new Error('env must be one of production or development');
+        else throw new Error('env must be one of "production" or "development"');
     }
 
     init () {
@@ -76,7 +73,6 @@ class SlimPay {
         };
 
         this.getOrRefreshToken();
-            
     }
 
     tokenIsNotValid () {
@@ -91,7 +87,6 @@ class SlimPay {
             .then( result => {
                 this.tokenConfig = result;
                 this.tokenConfig['seconds'] = Date.now() / 1000;
-                console.log('this.tokenConfig = ', this.tokenConfig);
                 return result.token;
             })
             .then( token => {
@@ -102,13 +97,10 @@ class SlimPay {
     checkToken () {
         if(this.tokenIsNotValid()) {
             return this.getOrRefreshToken()
-                .then( options => {
-                    console.log('options ==> ', options);            
+                .then( options => {          
                     return options;
                 });
         } else {
-            console.log('didn\'t need to');
-            console.log('this.requestOptions ===> ', this.requestOptions);
             return Promise.resolve(this.requestOptions);
         }
     }
@@ -141,7 +133,6 @@ class SlimPay {
     }
 
     slimPayApi () {
-        // console.log('in slimPayApi');
         return this.checkToken()
             .then( requestOptions => traverson.from(this.endPoint).jsonHal().withRequestOptions(requestOptions));
     }
@@ -200,235 +191,109 @@ class SlimPay {
                     return controleResult(err, res, traversal, resolve, reject);
                 });
         });
-    }   
-
-    follow (method, linkToFollow, options = null) {
-        // test METHOD IS ONE OF GET POST PUT PATCH OR DELETE
-        // test if options has a traversal here ?
-        // some for request data or template parameters?
-        switch(method) {
-            case 'GET':
-                if (options) {
-                    return this.get(linkToFollow, options);
-                } else {
-                    return this.get(linkToFollow);
-                }
-                break;
-            case 'POST':
-                if (options) {
-                    return this.post(linkToFollow, options);
-                } else {
-                    return this.post(linkToFollow);
-                }
-                break;
-            case 'PUT':
-                if (options) {
-                    return this.put(linkToFollow, options);
-                } else {
-                    return this.put(linkToFollow);
-                }
-                break;
-            case 'PATCH':
-                if (options) {
-                    return this.patch(linkToFollow, options);
-                } else {
-                    return this.patch(linkToFollow);
-                }
-                break;
-            default:
-                return this.get(linkToFollow);
-        }
     }
 
-    get (linkToFollow, libOptions = null) {
-        if(!libOptions) {
-            return this.getAuthenticationToken()
-                .then(token => {
-                    return this.buildOptions(token)
-                })
-                .then(options => {
-                    return new Promise((resolve, reject) => {
-                        traverson
-                            .from(this.endpointURI)
-                            .jsonHal()
-                            .withRequestOptions(options)
-                            .follow(linkToFollow)
-                            .get((err, res) => {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    var result = JSON.parse(res.body);
-                                    resolve(result);
-                                }
-                            });
-                    });
+    getCreditor (traversal) {
+        return new Promise((resolve, reject) => {
+            return traversal.continue()
+                .follow('https://api.slimpay.net/alps#get-creditor')
+                .get((err, res, traversal) => {
+                    return controleResult(err, res, traversal, resolve, reject);
                 });
-        } else {
-            if (libOptions.templateParameters) {    
-                return this.getAuthenticationToken()
-                    .then(token => {
-                        return this.buildOptions(token)
-                    })
-                    .then(options => {
-                        return new Promise((resolve, reject) => {
-                            traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                                .withTemplateParameters(libOptions.templateParameters)
-                                .follow(linkToFollow)
-                                .get((err, res) => {
-                                    if (err) {
-                                        reject(err);
-                                    } else {
-                                        var result = JSON.parse(res.body);
-                                        resolve(result);
-                                    }
-                                });
-                        });
-                    });
-            }
-        }
+        });
     }
 
-    post (linkToFollow, libOptions = null) {
-        if(!libOptions){
-            return this.getLinks().then( links => {
+    getSubscriber (traversal) {
+        return new Promise((resolve, reject) => {
+            return traversal.continue()
+                .follow('https://api.slimpay.net/alps#get-subscriber')
+                .get((err, res, traversal) => {
+                    return controleResult(err, res, traversal, resolve, reject);
+                });
+        });
+    }
+
+    follow (traversal, follow) {
+        if(!follow.method) follow.method = 'GET';
+        switch(follow.method) {
+            case 'GET':
                 return new Promise((resolve, reject) => {
-                    links.traversal.continue()
-                        .follow(linkToFollow)
-                        .post((err, res, traversal) => {
+                    return traversal.continue()
+                        .follow(follow.relation)
+                        .get((err, res, traversal) => {
                             return controleResult(err, res, traversal, resolve, reject);
                         });
                 });
-                    
-            });
-        } else {
-            if(!libOptions.templateParameters && libOptions.item) {
-                return this.getLinks().then( links => {
-                    return new Promise((resolve, reject) => {
-                        links.traversal.continue()
-                            .follow(linkToFollow)
-                            .post(item, (err, res, traversal) => {
-                                return controleResult(err, res, traversal, resolve, reject);
-                            });
-                    });
-                        
-                });
-            } else {
-                return this.getLinks().then( links => {
-                    return new Promise((resolve, reject) => {
-                        links.traversal.continue()
-                            .withTemplateParameters(libOptions.templateParameters)
-                            .follow(linkToFollow)
-                            .post(item, (err, res, traversal) => {
-                                return controleResult(err, res, traversal, resolve, reject);
-                            });
-                    });
-                        
-                });
-            }
-        }
-    }
-
-    put (linkToFollow, libOptions = null) {
-        if (!libOptions) {
-            return this.getAuthenticationToken()
-                .then(token => {
-                    return this.buildOptions(token)
-                })
-                .then(options => {
-                    return new Promise((resolve, reject) => {
-                        traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                            .follow(linkToFollow)
-                            .put((err, res) => {
-                                if (err) reject(err);
-                                else resolve(JSON.parse(res.body));
-                            });
-                    });
-                });
-        } else {
-            if(!libOptions.templateParameters && libOptions.item){
-                return this.getAuthenticationToken()
-                    .then(token => {
-                        return this.buildOptions(token)
-                    })
-                    .then(options => {
+            case 'POST':
+                if(!follow.data) throw new Error('must have data to POST');
+                else {
+                    if(follow.templateParameters) {
                         return new Promise((resolve, reject) => {
-                            traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                                .follow(linkToFollow)
-                                .put(libOptions.item, (err, res) => {
-                                    if (err) reject(err);
-                                    else resolve(JSON.parse(res.body));
+                            return traversal.continue()
+                                .withTemplateParameters(follow.templateParameters)
+                                .follow(follow.relation)
+                                .post(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
                                 });
                         });
-                    });
-            } else {
-                return this.getAuthenticationToken()
-                    .then(token => {
-                        return this.buildOptions(token)
-                    })
-                    .then(options => {
+                    } else {
                         return new Promise((resolve, reject) => {
-                            traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                                .withTemplateParameters(libOptions.templateParameters)
-                                .follow(linkToFollow)
-                                .put(libOptions.item, (err, res) => {
-                                    if (err) reject(err);
-                                    else resolve(JSON.parse(res.body));
+                            return traversal.continue()
+                                .follow(follow.relation)
+                                .post(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
                                 });
                         });
-                    });
-            }
-        }
-    }
-
-    patch (linkToFollow, libOptions = null) {
-        if (!libOptions) {
-            return this.getAuthenticationToken()
-                .then(token => {
-                    return this.buildOptions(token)
-                })
-                .then(options => {
-                    return new Promise((resolve, reject) => {
-                        traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                            .follow(linkToFollow)
-                            .patch((err, res) => {
-                                if (err) reject(err);
-                                else resolve(JSON.parse(res.body));
-                            });
-                    });
-                });
-        } else {
-            if(!libOptions.templateParameters && libOptions.item){
-                return this.getAuthenticationToken()
-                    .then(token => {
-                        return this.buildOptions(token)
-                    })
-                    .then(options => {
+                    }
+                }
+            case 'PUT':
+                if(!follow.data) throw new Error('must have data to PUT');
+                else {
+                    if(follow.templateParameters) {
                         return new Promise((resolve, reject) => {
-                            traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                                .follow(linkToFollow)
-                                .patch(libOptions.item, (err, res) => {
-                                    if (err) reject(err);
-                                    else resolve(JSON.parse(res.body));
+                            return traversal.continue()
+                                .withTemplateParameters(follow.templateParameters)
+                                .follow(follow.relation)
+                                .put(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
                                 });
                         });
-                    });
-            } else {
-                return this.getAuthenticationToken()
-                    .then(token => {
-                        return this.buildOptions(token)
-                    })
-                    .then(options => {
+                    } else {
                         return new Promise((resolve, reject) => {
-                            traverson.from(this.endpointURI).jsonHal().withRequestOptions(options)
-                                .withTemplateParameters(libOptions.templateParameters)
-                                .follow(linkToFollow)
-                                .patch(libOptions.item, (err, res) => {
-                                    if (err) reject(err);
-                                    else resolve(JSON.parse(res.body));
+                            return traversal.continue()
+                                .follow(follow.relation)
+                                .put(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
                                 });
                         });
-                    });
-            }
+                    }
+                }
+            case 'PATCH':
+                if(!follow.data) throw new Error('must have data to POST');
+                else {
+                    if(follow.templateParameters) {
+                        return new Promise((resolve, reject) => {
+                            return traversal.continue()
+                                .withTemplateParameters(follow.templateParameters)
+                                .follow(follow.relation)
+                                .patch(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
+                                });
+                        });
+                    } else {
+                        return new Promise((resolve, reject) => {
+                            return traversal.continue()
+                                .follow(follow.relation)
+                                .patch(follow.data, (err, res, traversal) => {
+                                    return controleResult(err, res, traversal, resolve, reject);
+                                });
+                        });
+                    }
+                }
+            case 'DELETE':
+                break;
+            default:
+                throw new Error('method must be one of GET | POST | PUT | PATCH | DELETE');
         }
     }
 }
