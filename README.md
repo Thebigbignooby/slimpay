@@ -164,8 +164,10 @@ slimpay.follow(traversal, options).then(function(response){
 
 ## Standard usecase : Sign a mandate
 
-The steps are rather straight-forward : 
+The steps are rather straight-forward :
+
 1) Create an order-representation which will be `POST`ed to the `#create-orders` link.
+
 2) Call the `signMandate()` with the order-representation as a parameter.
 
 ```javascript
@@ -236,6 +238,7 @@ This should give you something that looks like this:
 3) What you want to do now is redirect your user to the URL provide in the `user-approval` link. This is a secure page hosted by SlimPay where your user can sign the mandate electronically by filling in a code he will have received by text-message on the phone number provided in the initial order-representation.
 
 4) In the classic scenario where you user has successfully signed the mandate, he is then redirected to a return-url which you determine when generating your slimpay API credentials. At this point you must retrieve the `order` and check its state is `'closed.completed'`.
+
 5) If the state is `'closed.completed'` you may then get the mandate by doing a `getMandate()`.
 
 Lets say your visitor has signed a mandate and returns to your website. You want to get the mandate to confirm that it is active. To do that, you must first do a `get-order` and check if `state === 'closed.completed'`. If this is the case you can then do a `get-mandate` simply by calling `slimpay.getMandate(traversal)` where traversal is the ressource given by the `get-order` action.
