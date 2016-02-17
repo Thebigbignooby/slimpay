@@ -254,5 +254,3 @@ return slimpay.getOrders(orderRef)
                 }
             });
 ```
-
-This documentation is a work in progress (WIP)
